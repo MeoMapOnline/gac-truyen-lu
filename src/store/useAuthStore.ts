@@ -12,7 +12,7 @@ interface AuthState {
   unlockChapter: (chapterId: string, price: number) => Promise<boolean>;
 }
 
-const API_URL = 'https://backend.youware.com/api';
+const API_URL = 'gac-truyen-lu.moralie0789.workers.dev';
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
