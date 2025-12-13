@@ -10,7 +10,7 @@ interface StoryState {
   incrementView: (storyId: string) => void;
 }
 
-const API_URL = 'https://backend.youware.com/api';
+const API_URL = 'gac-truyen-lu.moralie0789.workers.dev';
 
 export const useStoryStore = create<StoryState>((set) => ({
   stories: [],
