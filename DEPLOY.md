@@ -1,139 +1,95 @@
-# Hướng Dẫn Triển Khai (Deployment Guide)
+# Hướng Dẫn Cài Đặt & Quản Trị (Đơn Giản Nhất)
 
-Tài liệu này hướng dẫn chi tiết cách đưa mã nguồn lên GitHub, triển khai Backend lên Cloudflare Workers và Frontend lên Netlify.
-
-## 1. Đưa mã nguồn lên GitHub
-
-### Bước 1: Tạo Repository mới trên GitHub
-1. Truy cập [github.com](https://github.com) và đăng nhập.
-2. Nhấn nút **New** (hoặc dấu + ở góc trên bên phải -> New repository).
-3. Đặt tên cho repository (ví dụ: `gac-truyen-lu`).
-4. Chọn **Public** hoặc **Private**.
-5. Nhấn **Create repository**.
-
-### Bước 2: Đẩy code lên GitHub
-Mở terminal (hoặc Command Prompt) tại thư mục dự án của bạn và chạy các lệnh sau:
-
-```bash
-# Khởi tạo git nếu chưa có
-git init
-
-# Thêm tất cả file vào git
-git add .
-
-# Commit code
-git commit -m "Initial commit"
-
-# Đổi tên nhánh chính thành main
-git branch -M main
-
-# Liên kết với repository trên GitHub (thay URL bằng URL của bạn)
-git remote add origin https://github.com/USERNAME/gac-truyen-lu.git
-
-# Đẩy code lên
-git push -u origin main
-```
+Tài liệu này sẽ giúp bạn đưa trang web lên mạng và đăng nhập vào trang quản trị.
 
 ---
 
-## 2. Triển khai Backend lên Cloudflare Workers
+## Phần 1: Đưa Web Lên Mạng (Deployment)
 
-Backend chịu trách nhiệm xử lý dữ liệu, đăng nhập và cơ sở dữ liệu.
+Bạn cần làm 3 việc chính:
+1.  **Lưu code**: Đưa lên GitHub.
+2.  **Chạy Backend**: Đưa lên Cloudflare Workers (để xử lý dữ liệu).
+3.  **Chạy Frontend**: Đưa lên Netlify (để người dùng truy cập).
 
-### Bước 1: Cài đặt Wrangler (Cloudflare CLI)
-Nếu chưa cài đặt, chạy lệnh:
-```bash
-npm install -g wrangler
-```
+### Bước 1: Đưa code lên GitHub
+1.  Vào [github.com](https://github.com) tạo một repository mới (ví dụ: `gac-truyen-lu`).
+2.  Mở terminal (cửa sổ lệnh) ở thư mục dự án và chạy:
+    ```bash
+    git init
+    git add .
+    git commit -m "First commit"
+    git branch -M main
+    git remote add origin https://github.com/USERNAME/gac-truyen-lu.git
+    git push -u origin main
+    ```
+    *(Thay `USERNAME` bằng tên GitHub của bạn)*
 
-### Bước 2: Đăng nhập Cloudflare
-```bash
-wrangler login
-```
-Trình duyệt sẽ mở ra, hãy đăng nhập và cho phép Wrangler truy cập.
+### Bước 2: Cài đặt Backend (Cloudflare)
+1.  **Cài đặt công cụ**:
+    ```bash
+    npm install -g wrangler
+    wrangler login
+    ```
+2.  **Tạo Database**:
+    ```bash
+    wrangler d1 create gac-truyen-lu-db
+    ```
+    *Copy `database_id` hiện ra màn hình.*
+3.  **Cấu hình**: Mở file `backend/wrangler.toml`, dán `database_id` vào dòng `database_id = "..."`.
+4.  **Tạo bảng dữ liệu**:
+    ```bash
+    cd backend
+    wrangler d1 execute gac-truyen-lu-db --file=schema.sql --remote
+    ```
+5.  **Đưa lên mạng**:
+    ```bash
+    npm run deploy
+    ```
+    *Copy đường dẫn hiện ra (ví dụ: `https://gac-truyen-lu-backend.abc.workers.dev`). Đây là API URL.*
 
-### Bước 3: Tạo Database D1
-```bash
-wrangler d1 create gac-truyen-lu-db
-```
-Sau khi chạy, bạn sẽ nhận được `database_id`. Hãy copy nó.
-
-### Bước 4: Cấu hình `backend/wrangler.toml`
-Mở file `backend/wrangler.toml` và cập nhật `database_id`:
-
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "gac-truyen-lu-db"
-database_id = "PASTE_YOUR_DATABASE_ID_HERE"
-```
-
-### Bước 5: Khởi tạo bảng (Schema)
-Chạy lệnh sau để tạo bảng trong database thật trên Cloudflare:
-```bash
-cd backend
-wrangler d1 execute gac-truyen-lu-db --file=schema.sql --remote
-```
-
-### Bước 6: Triển khai Backend
-```bash
-npm run deploy
-```
-Sau khi xong, bạn sẽ nhận được một URL (ví dụ: `https://gac-truyen-lu-backend.username.workers.dev`).
-**Hãy copy URL này.**
-
----
-
-## 3. Triển khai Frontend lên Netlify
-
-Frontend là giao diện người dùng (React).
-
-### Bước 1: Cập nhật API URL
-Mở file `src/store/useAuthStore.ts` và `src/store/useStoryStore.ts`.
-Thay thế `https://backend.youware.com/api` bằng URL Backend của bạn vừa nhận được ở trên.
-
-Ví dụ:
-```typescript
-const API_URL = 'https://gac-truyen-lu-backend.username.workers.dev/api';
-```
-
-### Bước 2: Đẩy code cập nhật lên GitHub
-```bash
-git add .
-git commit -m "Update API URL"
-git push
-```
-
-### Bước 3: Kết nối Netlify với GitHub
-1. Truy cập [netlify.com](https://www.netlify.com) và đăng nhập.
-2. Nhấn **Add new site** -> **Import from existing project**.
-3. Chọn **GitHub**.
-4. Tìm và chọn repository `gac-truyen-lu`.
-
-### Bước 4: Cấu hình Build
-Netlify thường tự động nhận diện, nhưng hãy kiểm tra:
-- **Build command**: `npm run build`
-- **Publish directory**: `dist`
-
-### Bước 5: Deploy
-Nhấn **Deploy site**. Netlify sẽ tự động build và cung cấp cho bạn một đường dẫn (ví dụ: `https://gac-truyen-lu.netlify.app`).
+### Bước 3: Cài đặt Frontend (Netlify)
+1.  **Cập nhật API URL**: Mở file `src/store/useAuthStore.ts` và `src/store/useStoryStore.ts`. Thay `https://backend.youware.com/api` bằng API URL bạn vừa copy ở trên.
+2.  **Đẩy code cập nhật lên GitHub**:
+    ```bash
+    git add .
+    git commit -m "Update API"
+    git push
+    ```
+3.  **Vào Netlify**: Chọn "Import from GitHub", chọn repository `gac-truyen-lu`, rồi nhấn **Deploy**.
 
 ---
 
-## 4. Cấu hình Google Login (Quan trọng)
+## Phần 2: Hướng Dẫn Quản Trị (Admin)
 
-Để nút đăng nhập Google hoạt động trên domain mới:
+Bạn hỏi: **"Quản trị đăng nhập bằng cách nào?"**
 
-1. Truy cập [Google Cloud Console](https://console.cloud.google.com/).
-2. Chọn project chứa Client ID của bạn.
-3. Vào **APIs & Services** -> **Credentials**.
-4. Chọn Client ID đang dùng.
-5. Tại mục **Authorized JavaScript origins**, thêm URL của Netlify (ví dụ: `https://gac-truyen-lu.netlify.app`).
-6. Lưu lại.
+**Trả lời**: Bạn đăng nhập bằng chính tài khoản Google của bạn trên trang web. Nhưng để hệ thống biết bạn là Admin, bạn cần **cấp quyền** cho tài khoản đó trong cơ sở dữ liệu.
 
-## Hoàn tất!
-Bây giờ trang web của bạn đã chạy thật sự trên internet:
-- Frontend: Netlify
-- Backend: Cloudflare Workers
-- Database: Cloudflare D1
-- Code: GitHub
+### Cách cấp quyền Admin (Chỉ làm 1 lần đầu tiên)
+
+1.  **Đăng nhập vào Web**: Truy cập trang web của bạn, bấm "Đăng nhập bằng Google".
+2.  **Vào Cloudflare Dashboard** (như ảnh bạn gửi):
+    *   Vào mục **D1** -> Chọn database `gac-truyen-lu-db`.
+    *   Vào tab **Console** (Bảng điều khiển).
+3.  **Chạy lệnh SQL sau để cấp quyền Admin cho chính bạn**:
+    ```sql
+    UPDATE users SET role = 'admin' WHERE email = 'EMAIL_CUA_BAN@gmail.com';
+    ```
+    *(Thay `EMAIL_CUA_BAN` bằng email bạn vừa dùng để đăng nhập)*.
+    *   Nhấn **Execute** (Thực thi).
+
+### Cách vào trang Quản Trị
+1.  Sau khi chạy lệnh trên, quay lại trang web của bạn.
+2.  Tải lại trang (F5).
+3.  Vào mục **Cá Nhân**.
+4.  Bạn sẽ thấy nút **Quản Trị** xuất hiện ở thanh menu dưới cùng (hoặc trong danh sách menu).
+5.  Bấm vào đó để vào giao diện quản lý (Duyệt bài, Rút tiền, Thống kê...).
+
+---
+
+## Phần 3: Cấu hình Google Login
+
+Để nút đăng nhập Google hoạt động trên tên miền thật (ví dụ `gactruyenlu.netlify.app`):
+1.  Vào [Google Cloud Console](https://console.cloud.google.com/).
+2.  Tìm Client ID bạn đang dùng.
+3.  Thêm đường dẫn trang web của bạn vào mục **Authorized JavaScript origins**.
